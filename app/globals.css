@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 42 35% 97%;
+  --foreground: 222 32% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 32% 10%;
+  --primary: 188 74% 28%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 34 30% 92%;
+  --secondary-foreground: 222 32% 14%;
+  --muted: 38 24% 91%;
+  --muted-foreground: 219 14% 40%;
+  --accent: 18 86% 93%;
+  --accent-foreground: 17 60% 26%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 36 18% 82%;
+  --input: 36 18% 82%;
+  --ring: 188 74% 28%;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: 220 22% 8%;
+  --foreground: 210 20% 96%;
+  --card: 220 20% 11%;
+  --card-foreground: 210 20% 96%;
+  --primary: 190 83% 45%;
+  --primary-foreground: 220 22% 8%;
+  --secondary: 215 18% 17%;
+  --secondary-foreground: 210 20% 96%;
+  --muted: 215 18% 17%;
+  --muted-foreground: 215 13% 68%;
+  --accent: 39 55% 20%;
+  --accent-foreground: 40 90% 88%;
+  --destructive: 0 63% 45%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 215 16% 20%;
+  --input: 215 16% 20%;
+  --ring: 190 83% 45%;
+}
+
+* {
+  @apply border-border;
+}
+
+body {
+  @apply bg-background text-foreground antialiased;
+  background-image:
+    linear-gradient(135deg, hsl(42 35% 97%) 0%, hsl(36 36% 95%) 42%, hsl(186 28% 94%) 100%);
+  min-height: 100vh;
+}
+
+textarea,
+input {
+  font: inherit;
+}
+
+::selection {
+  background: hsl(var(--primary) / 0.16);
+}

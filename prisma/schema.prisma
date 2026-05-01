@@ -1,0 +1,302 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Tone {
+  PROFESSIONAL
+  FRIENDLY
+  CONFIDENT
+  CONCISE
+  STORYTELLING
+}
+
+enum WorkflowStatus {
+  GENERATED
+  REVIEWED
+  EDITED
+  APPROVED
+  COPIED
+  MANUALLY_COMPLETED
+}
+
+enum ConnectionStatus {
+  NOT_CONTACTED
+  DRAFT_READY
+  REQUEST_SENT_MANUALLY
+  CONNECTED
+  MESSAGED_MANUALLY
+  REPLIED
+  NOT_INTERESTED
+}
+
+enum CalendarStatus {
+  IDEA
+  DRAFT
+  READY
+  POSTED_MANUALLY
+}
+
+enum PostType {
+  PROJECT_SHOWCASE
+  INTERNSHIP_COMPLETION
+  LEARNING_JOURNEY
+  TECHNICAL_EXPLANATION
+  ACHIEVEMENT
+  JOB_SEEKING
+  PORTFOLIO_LAUNCH
+  NETWORKING
+  PLACEMENT_PREPARATION
+  THOUGHT_LEADERSHIP
+}
+
+enum MessageType {
+  THANK_YOU
+  CAREER_GUIDANCE
+  REFERRAL_REQUEST
+  COLLABORATION
+  PROJECT_FEEDBACK
+  ALUMNI_NETWORKING
+  RECRUITER_OUTREACH
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  accounts      Account[]
+  sessions      Session[]
+  profile       UserProfile?
+  targets       ConnectionTarget[]
+  postDrafts    PostDraft[]
+  messageDrafts MessageDraft[]
+  ideas         ContentIdea[]
+  calendarItems ContentCalendarItem[]
+  promptRuns    PromptRun[]
+  insights      AIInsight[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model UserProfile {
+  id             String     @id @default(cuid())
+  userId         String     @unique
+  fullName       String
+  headline       String?
+  currentRole    String?
+  location       String?
+  resumeText     String?
+  targetRoles    String[]
+  targetIndustries String[]
+  careerGoals    String?
+  preferredTone  Tone       @default(PROFESSIONAL)
+  linkedinBio    String?
+  linkedinLinks  String[]
+  portfolioLinks String[]
+  githubLinks    String[]
+  projects       Project[]
+  skills         Skill[]
+  interests      Interest[]
+  pastPosts      PastPost[]
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model Skill {
+  id        String      @id @default(cuid())
+  name      String
+  profileId String
+  profile   UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model Interest {
+  id        String      @id @default(cuid())
+  name      String
+  profileId String
+  profile   UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model Project {
+  id          String      @id @default(cuid())
+  title       String
+  description String
+  link        String?
+  profileId   String
+  profile     UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model PastPost {
+  id        String      @id @default(cuid())
+  content   String
+  topic     String?
+  profileId String
+  profile   UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+}
+
+model ConnectionTarget {
+  id                    String             @id @default(cuid())
+  userId                String
+  name                  String
+  linkedinUrl           String?
+  currentRole           String?
+  company               String?
+  industry              String?
+  location              String?
+  whyConnect            String?
+  source                String?
+  status                ConnectionStatus   @default(NOT_CONTACTED)
+  notes                 String?
+  tags                  String[]
+  careerRelevance       Int                @default(0)
+  sharedInterests        Int                @default(0)
+  industryMatch          Int                @default(0)
+  roleRelevance          Int                @default(0)
+  networkingValue        Int                @default(0)
+  personalizationScore   Int                @default(0)
+  user                  User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connectionDrafts       ConnectionDraft[]
+  messageDrafts          MessageDraft[]
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+}
+
+model ConnectionDraft {
+  id              String           @id @default(cuid())
+  targetId        String
+  variations      String[]
+  selectedText    String?
+  confidenceScore Int              @default(0)
+  explanation     String?
+  status          WorkflowStatus   @default(GENERATED)
+  target          ConnectionTarget @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model MessageDraft {
+  id              String            @id @default(cuid())
+  userId          String
+  targetId        String?
+  type            MessageType
+  variations      String[]
+  selectedText    String?
+  status          WorkflowStatus    @default(GENERATED)
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  target          ConnectionTarget? @relation(fields: [targetId], references: [id], onDelete: SetNull)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+}
+
+model PostDraft {
+  id                    String          @id @default(cuid())
+  userId                String
+  type                  PostType
+  topic                 String
+  goal                  String?
+  targetAudience        String?
+  tone                  Tone            @default(PROFESSIONAL)
+  length                String          @default("medium")
+  includeHashtags       Boolean         @default(true)
+  includeEmojis         Boolean         @default(false)
+  includeCallToAction   Boolean         @default(true)
+  variations            String[]
+  selectedText          String?
+  hooks                 String[]
+  hashtags              String[]
+  bestPostingTime       String?
+  status                WorkflowStatus  @default(GENERATED)
+  user                  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  calendarItems         ContentCalendarItem[]
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+}
+
+model ContentIdea {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  pillar    String?
+  notes     String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model ContentCalendarItem {
+  id          String         @id @default(cuid())
+  userId      String
+  postDraftId String?
+  title       String
+  pillar      String?
+  scheduledFor DateTime?
+  status      CalendarStatus @default(IDEA)
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postDraft   PostDraft?     @relation(fields: [postDraftId], references: [id], onDelete: SetNull)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model PromptRun {
+  id             String   @id @default(cuid())
+  userId         String
+  category       String
+  provider       String
+  model          String
+  promptPreview  String
+  output         Json
+  safetyNotes    String?
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+}
+
+model AIInsight {
+  id        String   @id @default(cuid())
+  userId    String
+  category  String
+  title     String
+  content   Json
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}

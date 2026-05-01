@@ -1,0 +1,1 @@
+ALTER TABLE "UserProfile" ADD COLUMN "linkedinLinks" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
