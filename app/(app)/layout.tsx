@@ -1,16 +1,22 @@
 import Link from "next/link";
 import { ArrowUpRight, Sparkles } from "lucide-react";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUserId } from "@/lib/user";
+import { getOptionalCurrentUserId, getOptionalSession } from "@/lib/user";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AppNav } from "@/components/app-nav";
 
+export const dynamic = "force-dynamic";
+
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
-  const userId = await getCurrentUserId();
-  const profile = await prisma.userProfile.findUnique({ where: { userId } });
+  const session = await getOptionalSession();
+  const userId = await getOptionalCurrentUserId();
+  const profile = userId
+    ? await prisma.userProfile.findUnique({ where: { userId } }).catch((error) => {
+        console.error("Profile lookup failed", error);
+        return null;
+      })
+    : null;
 
   return (
     <div className="min-h-screen">
